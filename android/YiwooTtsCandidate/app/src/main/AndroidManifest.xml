@@ -1,0 +1,67 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+    <application android:name="com.yiwoosolution.piperprototype.YiwooCandidateApplication" android:theme="@style/AppTheme" android:label="YIWOO TTS" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round">
+        <receiver android:name="com.yiwoosolution.piperprototype.TimeAnnouncementReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name="com.yiwoosolution.piperprototype.RuntimeBootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+        <service android:name="com.yiwoosolution.piperprototype.RuntimeRetentionService" android:exported="false" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-selected offline TTS readiness to avoid model cold-start latency for speech requests" />
+        </service>
+        <activity android:name="com.yiwoosolution.piperprototype.MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.yiwoosolution.piperprototype.ProcessTextActivity" android:exported="true" android:label="@string/process_text_action">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data android:name="android.intent.extra.PROCESS_TEXT_READONLY" android:value="true" />
+        </activity>
+        <activity android:name="com.yiwoosolution.piperprototype.LegalNoticesActivity" android:exported="false" android:label="오픈소스 고지" />
+        <activity android:name="com.yiwoosolution.piperprototype.FrameworkEnglishSmokeActivity" android:exported="true" android:label="English smoke test" />
+        <activity android:name="com.yiwoosolution.piperprototype.EnglishPrototypeActivity" android:exported="true" android:label="English Korean A/B prototype" />
+        <service android:name="com.yiwoosolution.piperprototype.PiperTtsService" android:label="YIWOO TTS" android:permission="android.permission.BIND_TEXT_SERVICE" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.TTS_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data android:name="android.speech.tts" android:resource="@xml/tts_engine" />
+        </service>
+        <service android:name="com.yiwoosolution.piperprototype.YiwooNotificationListenerService"
+            android:label="YIWOO TTS notification reading"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

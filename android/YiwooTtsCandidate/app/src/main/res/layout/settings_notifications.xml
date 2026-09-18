@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+    <TextView style="@style/SettingsSectionTitle" android:text="알림 읽기" />
+    <LinearLayout style="@style/SettingsCard">
+        <Switch android:id="@+id/notification_read_enabled" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp" android:text="알림 자동 읽기" android:textSize="16sp" />
+        <Switch android:id="@+id/notification_respect_ringer_mode" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp" android:text="휴대폰 무음/진동 모드 따르기" android:textSize="16sp" />
+        <TextView style="@style/SettingsSummary" android:text="켜면 무음 또는 진동 모드에서는 알림을 읽지 않습니다." />
+        <TextView style="@style/SettingsRowTitle" android:layout_marginTop="12dp" android:text="알림 읽기 내용" />
+        <RadioGroup android:id="@+id/notification_content_group" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <RadioButton android:id="@+id/notification_content_alert" style="@style/SettingsRadio" android:text="간단히 읽기" />
+            <TextView style="@style/SettingsSummary" android:text="앱 이름과 발신자 또는 제목을 읽습니다." />
+            <RadioButton android:id="@+id/notification_content_full" style="@style/SettingsRadio" android:text="전체 읽기" />
+            <TextView style="@style/SettingsSummary" android:text="앱 이름, 제목과 알림 내용을 읽습니다." />
+        </RadioGroup>
+        <TextView style="@style/SettingsRowTitle" android:layout_marginTop="12dp" android:text="읽을 앱" />
+        <RadioGroup android:id="@+id/app_filter_group" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <RadioButton android:id="@+id/filter_all_except" style="@style/SettingsRadio" android:text="모든 앱, 제외 앱은 읽지 않음" />
+            <RadioButton android:id="@+id/filter_only_allowed" style="@style/SettingsRadio" android:text="선택한 앱만" />
+        </RadioGroup>
+        <TextView android:id="@+id/app_selection_summary" style="@style/SettingsSummary" android:text="선택한 앱 0개" />
+        <TextView android:id="@+id/select_apps" style="@style/SettingsAction" android:text="앱 선택" />
+        <TextView android:id="@+id/open_notification_access" style="@style/SettingsAction" android:text="알림 접근 설정 열기" />
+    </LinearLayout>
+</LinearLayout>

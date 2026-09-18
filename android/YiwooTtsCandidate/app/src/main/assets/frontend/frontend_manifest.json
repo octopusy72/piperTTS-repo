@@ -1,0 +1,16 @@
+{
+  "normalization_method": "frontend.normalization.ko_basic.normalize; deterministic prototype rules",
+  "phoneme_method": "jamo.h2j then jamo.j2hcj, preserving punctuation and spaces",
+  "phoneme_vocabulary": "models/phoneme_map_v2.json",
+  "phoneme_to_id_mapping": "models/phoneme_map_v2.json",
+  "special_tokens": {"pad": 59, "bos": 60, "eos": 61},
+  "blank_policy": "BOS + PAD + (phoneme + PAD)* + EOS",
+  "bos_eos_policy": "Reference Piper special-token topology",
+  "sample_rate": 16000,
+  "speaker_id_policy": "single speaker; no sid input",
+  "length_scale_default": 1.0,
+  "noise_scale_default": 0.667,
+  "noise_w_default": 0.8,
+  "hop_length": 256,
+  "training_text_policy": "8523 special-token topology; vocab size 62"
+}

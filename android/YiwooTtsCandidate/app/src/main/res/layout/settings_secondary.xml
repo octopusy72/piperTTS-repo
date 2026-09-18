@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+    <TextView style="@style/SettingsSectionTitle" android:text="설정" />
+    <LinearLayout style="@style/SettingsCard">
+        <TextView android:id="@+id/speech_test_button" style="@style/SettingsAction" android:text="음성 테스트" />
+        <TextView android:id="@+id/tts_settings_button" style="@style/SettingsAction" android:text="시스템 음성 합성 설정" />
+        <TextView android:id="@+id/reading_rules_button" style="@style/SettingsAction" android:text="사용자 읽기 규칙" />
+        <TextView style="@style/SettingsSummary" android:text="자주 틀리게 읽는 단어나 번호의 읽는 방법을 정합니다." />
+        <TextView android:id="@+id/memory_button" style="@style/SettingsAction" android:text="음성 엔진 메모리 유지" />
+        <TextView style="@style/SettingsSummary" android:text="빠른 응답을 위해 필요한 동안 엔진을 유지합니다." />
+        <TextView android:id="@+id/diagnostics_button" style="@style/SettingsAction" android:text="진단 정보" />
+        <TextView android:id="@+id/copy_diagnostics_button" style="@style/SettingsAction" android:text="진단 정보 복사" />
+    </LinearLayout>
+    <TextView style="@style/SettingsSectionTitle" android:text="정보" />
+    <LinearLayout style="@style/SettingsCard">
+        <TextView style="@style/SettingsRowTitle" android:text="YIWOO TTS" />
+        <TextView style="@style/SettingsSummary" android:text="한국어 및 영어 온디바이스 음성 합성 엔진\nYiwoo Solution · 버전 0.9.0" />
+        <TextView android:id="@+id/about_button" style="@style/SettingsAction" android:text="앱 정보" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">YIWOO TTS</string>
+    <string name="voice_test">음성 테스트</string>
+    <string name="notification_reading">알림 읽기</string>
+    <string name="notification_access">알림 접근 권한 설정</string>
+    <string name="voice_language">언어 및 음성</string>
+    <string name="settings">설정</string>
+    <string name="available">사용 가능</string>
+    <string name="unavailable">사용할 수 없음</string>
+    <string name="permission_required">알림 접근 권한 필요</string>
+    <string name="about">앱 정보</string>
+    <string name="diagnostics">진단 정보</string>
+    <string name="process_text_action">TTS로 읽기</string>
+</resources>

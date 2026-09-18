@@ -1,0 +1,30 @@
+plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+
+android { namespace 'com.yiwoosolution.koreantts'; compileSdk 36
+    defaultConfig {
+        applicationId 'com.yiwoosolution.koreantts'; minSdk 28; targetSdk 35; versionCode 10000; versionName '1.0.0'
+        testInstrumentationRunner 'com.yiwoosolution.piperprototype.RuntimeLifecycleInstrumentation'
+        externalNativeBuild { cmake { cppFlags '-std=c++17' } }
+        ndk { abiFilters 'arm64-v8a' }
+    }
+    externalNativeBuild { cmake { path file('src/main/cpp/CMakeLists.txt'); version '3.22.1' } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    buildFeatures { buildConfig true }
+    buildTypes {
+        debug { buildConfigField 'boolean', 'ENGLISH_VOICE_INCLUDED', 'true' }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            // Preparation builds remain installable without using a production release key.
+            signingConfig signingConfigs.debug
+            buildConfigField 'boolean', 'ENGLISH_VOICE_INCLUDED', 'true'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    packaging { jniLibs { useLegacyPackaging true } }
+}
+
+dependencies {
+    implementation files('libs/onnxruntime-android-arm64-only-v2.aar')
+    testImplementation 'junit:junit:4.13.2'
+}

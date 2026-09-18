@@ -1,0 +1,17 @@
+.gradle/
+.kotlin/
+.idea/
+**/.cxx/
+**/build/
+local.properties
+*.apk
+*.aab
+*.idsig
+*.jks
+*.keystore
+**/assets/models/
+**/assets/pronunciation/
+**/assets/g2pkk/
+**/assets/normalization/
+analysis/
+release/
