@@ -3,6 +3,20 @@
 This repository contains the Android application source corresponding to the
 YIWOO TTS 1.0.0 internal preparation build. It is not a final product release.
 
+## License
+
+Copyright (C) 2026 Yiwoo Solution.
+
+Unless a file or directory carries a different notice, the YIWOO TTS Android
+application source code in this repository is licensed under the GNU General
+Public License, version 3 or (at your option) any later version
+(`GPL-3.0-or-later`). See `LICENSE`.
+
+This source-code license does not grant rights to model weights, training
+datasets, generated pronunciation data, release signing material, or YIWOO
+names and logos unless those assets explicitly state otherwise. See
+`MODEL_ASSETS.md` and `TRADEMARKS.md`.
+
 ## Scope
 
 Included:
@@ -28,6 +42,9 @@ separately trained LJSpeech-based voice.
 The project expects Android SDK 36, NDK support for `arm64-v8a`, Java 17, and
 the locally referenced ONNX Runtime Android AAR under `app/libs/`. Model and
 frontend runtime assets are intentionally not published here.
+
+See `BUILDING.md` for the reproducible source-build prerequisites, excluded
+runtime asset locations, and external signing configuration.
 
 ## Third-party source
 
