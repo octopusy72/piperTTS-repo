@@ -1,5 +1,13 @@
 plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
 
+def releaseSigningProperties = new Properties()
+def releaseSigningFile = file(System.getenv('YIWOO_SIGNING_PROPERTIES') ?:
+        "${System.getProperty('user.home')}/.config/yiwoo-tts/signing.properties")
+def hasReleaseSigning = releaseSigningFile.isFile()
+if (hasReleaseSigning) {
+    releaseSigningFile.withInputStream { releaseSigningProperties.load(it) }
+}
+
 android { namespace 'com.yiwoosolution.koreantts'; compileSdk 36
     defaultConfig {
         applicationId 'com.yiwoosolution.koreantts'; minSdk 28; targetSdk 35; versionCode 10000; versionName '1.0.0'
@@ -10,13 +18,24 @@ android { namespace 'com.yiwoosolution.koreantts'; compileSdk 36
     externalNativeBuild { cmake { path file('src/main/cpp/CMakeLists.txt'); version '3.22.1' } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     buildFeatures { buildConfig true }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(releaseSigningProperties['storeFile'])
+                storePassword releaseSigningProperties['storePassword']
+                keyAlias releaseSigningProperties['keyAlias']
+                keyPassword releaseSigningProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         debug { buildConfigField 'boolean', 'ENGLISH_VOICE_INCLUDED', 'true' }
         release {
             minifyEnabled true
             shrinkResources true
-            // Preparation builds remain installable without using a production release key.
-            signingConfig signingConfigs.debug
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             buildConfigField 'boolean', 'ENGLISH_VOICE_INCLUDED', 'true'
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
