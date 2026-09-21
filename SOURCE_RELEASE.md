@@ -1,10 +1,10 @@
-# Source release v1.1.0-rc1
+# Source release v1.1.0
 
 Application version: 1.1.0 (10100), arm64-v8a, Android API 28 or later.
 Source date: 2026-09-21.
 
 The tag identifies the application source, JNI bridge, eSpeak NG source/data,
-resources and build configuration used for this release candidate. The APK's
+resources and build configuration used for this release. The APK's
 NOTICE links to this tag. APK and runtime asset hashes accompany the binary
 distribution; `runtime-assets.json` records the assets expected by this source.
 

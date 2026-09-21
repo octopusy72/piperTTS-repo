@@ -1,11 +1,11 @@
-YIWOO TTS 1.1.0 Release Candidate
+YIWOO TTS 1.1.0
 
 YIWOO TTS Android application source
 Copyright (C) 2026 Yiwoo Solution
 Licensed under GNU GPL version 3 or, at your option, any later version.
 Corresponding source: https://github.com/octopusy72/piperTTS-repo
-Source version: v1.1.0-rc1
-https://github.com/octopusy72/piperTTS-repo/tree/v1.1.0-rc1
+Source version: v1.1.0
+https://github.com/octopusy72/piperTTS-repo/tree/v1.1.0
 Full license texts are available from this screen's license menu and are
 included in the APK assets/licenses directory.
 
@@ -74,7 +74,7 @@ POSSIBILITY OF SUCH DAMAGE.
 eSpeak NG
 Copyright holders are listed in the bundled eSpeak NG source distribution.
 Licensed under the GNU General Public License version 3 or later. Corresponding
-source for this release candidate is published at:
+source for this release is published at:
 https://github.com/octopusy72/piperTTS-repo
 
 Bundled eSpeak NG version: 1.52.0.1. Its Unicode data and BSD-licensed

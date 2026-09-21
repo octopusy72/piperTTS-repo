@@ -1,7 +1,7 @@
 {
   "version": "1.1.0",
   "version_code": 10100,
-  "source_tag": "v1.1.0-rc1",
+  "source_tag": "v1.1.0",
   "artifacts": [
     {
       "file": "LICENSE",
@@ -19,9 +19,9 @@
       "sha256": "b57b241588f1fa7a57ac601ea3657b51b49a952dd411dad975e8cd0e7ef47631"
     },
     {
-      "file": "YiwooTTS-1.1.0-rc1.apk",
-      "bytes": 142467439,
-      "sha256": "b9b6e04cb0fa20d2062fa3b28506d169df8e45361e7b685949b836b391fe22f7"
+      "file": "YiwooTTS-1.1.0.apk",
+      "bytes": 142467423,
+      "sha256": "ca245b844c0edbd09b58ca4dd409b7cb697cfbaea4b83ba678698977294f9f9a"
     }
   ]
 }

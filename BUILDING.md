@@ -11,10 +11,10 @@
 ## Build
 
 For synthesis, first provision the runtime data from your separately supplied
-1.1.0 RC APK (Python 3, standard library only):
+1.1.0 APK (Python 3, standard library only):
 
 ```bash
-python3 tools/provision_runtime_assets.py /path/to/YiwooTTS-1.1.0-rc1.apk
+python3 tools/provision_runtime_assets.py /path/to/YiwooTTS-1.1.0.apk
 ```
 
 The script accepts only the asset paths and SHA-256 values in

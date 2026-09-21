@@ -1,7 +1,7 @@
 # YIWOO TTS Android 1.1.0
 
-This repository contains the Android application source corresponding to the
-YIWOO TTS 1.1.0 release candidate, source tag `v1.1.0-rc1`.
+This repository contains the Android application source corresponding to
+YIWOO TTS 1.1.0, source tag `v1.1.0`.
 It includes the Korean 1M and English LJSpeech 1M runtime integration,
 notification reading, time announcements, and pronunciation normalization.
 The model binaries are distributed separately from this source repository.

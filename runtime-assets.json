@@ -1,5 +1,5 @@
 {
-  "source_tag": "v1.1.0-rc1",
+  "source_tag": "v1.1.0",
   "assets": [
     {
       "path": "models/en_ljspeech_piper_1m.onnx",
