@@ -1,8 +1,11 @@
 package com.yiwoosolution.piperprototype;
 
 import android.content.Context;
+import com.yiwoosolution.koreantts.speech.NumberReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Shared, playback-only pause policy. It never changes frontend input. */
 final class SentenceBoundaryPausePolicy {
@@ -10,6 +13,11 @@ final class SentenceBoundaryPausePolicy {
   static final String KEY = "sentence_pause_ms";
   static final int MIN_MS = 0, MAX_MS = 1000, STEP_MS = 20, DEFAULT_MS = 300;
   private static final int STRONG_MULTIPLIER_TENTHS = 18;
+  private static final Pattern LINE_LIST_MARKER = Pattern.compile(
+      "(?m)^[\\t ]*(\\d{1,3}|[A-Za-z])[\\t ]*[.)][\\t ]+(?=\\S)");
+  private static final String[] LETTERS = {
+      "에이", "비", "씨", "디", "이", "에프", "지", "에이치", "아이", "제이", "케이", "엘", "엠",
+      "엔", "오", "피", "큐", "알", "에스", "티", "유", "브이", "더블유", "엑스", "와이", "지"};
 
   static int pauseMs(Context context) {
     return Math.max(MIN_MS, Math.min(MAX_MS, context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY, DEFAULT_MS)));
@@ -37,6 +45,18 @@ final class SentenceBoundaryPausePolicy {
     List<Segment> result = new ArrayList<>();
     if (input == null || input.trim().isEmpty()) return result;
     String text = input.replace("\r\n", "\n").replace('\r', '\n');
+    // Convert before sentence splitting: the label and its body share acoustic context.
+    Matcher labels = LINE_LIST_MARKER.matcher(text);
+    StringBuffer joined = new StringBuffer();
+    while (labels.find()) {
+      String token = labels.group(1);
+      String spoken = Character.isDigit(token.charAt(0))
+          ? NumberReader.INSTANCE.sino(Long.parseLong(token))
+          : LETTERS[Character.toUpperCase(token.charAt(0)) - 'A'];
+      labels.appendReplacement(joined, Matcher.quoteReplacement(spoken + ", "));
+    }
+    labels.appendTail(joined);
+    text = joined.toString();
     int start = 0;
     for (int i = 0; i < text.length();) {
       char c = text.charAt(i);

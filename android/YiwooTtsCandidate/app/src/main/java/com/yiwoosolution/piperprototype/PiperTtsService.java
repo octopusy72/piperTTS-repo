@@ -41,27 +41,27 @@ public final class PiperTtsService extends TextToSpeechService {
 
   @Override public List<Voice> onGetVoices() {
     List<Voice> voices = new ArrayList<>();
-    voices.add(new Voice("ko_8523_piper_v2_500k", Locale.KOREA, Voice.QUALITY_NORMAL, Voice.LATENCY_NORMAL, false, new HashSet<String>()));
-    voices.add(new Voice("en_lessac_low", Locale.US, Voice.QUALITY_NORMAL, Voice.LATENCY_NORMAL, false, new HashSet<String>()));
+    voices.add(new Voice("ko_8523_piper_v2_1000k", Locale.KOREA, Voice.QUALITY_NORMAL, Voice.LATENCY_NORMAL, false, new HashSet<String>()));
+    voices.add(new Voice("en_ljspeech_piper_1m", Locale.US, Voice.QUALITY_NORMAL, Voice.LATENCY_NORMAL, false, new HashSet<String>()));
     return voices;
   }
 
   @Override protected String[] onGetLanguage() { return language.startsWith("en") ? new String[]{"eng", "USA", ""} : new String[]{"kor", "KOR", ""}; }
 
   @Override public String onGetDefaultVoiceNameFor(String lang, String country, String variant) {
-    if ("eng".equalsIgnoreCase(lang) || "en".equalsIgnoreCase(lang)) return "en_lessac_low";
-    if ("kor".equalsIgnoreCase(lang) || "ko".equalsIgnoreCase(lang)) return "ko_8523_piper_v2_500k";
+    if ("eng".equalsIgnoreCase(lang) || "en".equalsIgnoreCase(lang)) return "en_ljspeech_piper_1m";
+    if ("kor".equalsIgnoreCase(lang) || "ko".equalsIgnoreCase(lang)) return "ko_8523_piper_v2_1000k";
     return null;
   }
 
   @Override public int onIsValidVoiceName(String voiceName) {
-    if ("en_lessac_low".equals(voiceName) || "ko_8523_piper_v2_500k".equals(voiceName)) return TextToSpeech.LANG_COUNTRY_AVAILABLE;
+    if ("en_ljspeech_piper_1m".equals(voiceName) || "ko_8523_piper_v2_1000k".equals(voiceName)) return TextToSpeech.LANG_COUNTRY_AVAILABLE;
     return TextToSpeech.LANG_NOT_SUPPORTED;
   }
 
   @Override public int onLoadVoice(String voiceName) {
-    if ("en_lessac_low".equals(voiceName)) { language = "en-US"; return TextToSpeech.LANG_COUNTRY_AVAILABLE; }
-    if ("ko_8523_piper_v2_500k".equals(voiceName)) { language = "ko-KR"; return TextToSpeech.LANG_COUNTRY_AVAILABLE; }
+    if ("en_ljspeech_piper_1m".equals(voiceName)) { language = "en-US"; return TextToSpeech.LANG_COUNTRY_AVAILABLE; }
+    if ("ko_8523_piper_v2_1000k".equals(voiceName)) { language = "ko-KR"; return TextToSpeech.LANG_COUNTRY_AVAILABLE; }
     return TextToSpeech.LANG_NOT_SUPPORTED;
   }
 

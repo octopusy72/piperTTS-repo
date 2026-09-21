@@ -14,10 +14,12 @@ import android.util.Log;
 
 /** Keeps user-requested readiness alive independently of the activity/TTS client. */
 public final class RuntimeRetentionService extends Service {
+  static final String ACTION_STOP_NOTIFICATION_READING = "com.yiwoosolution.koreantts.STOP_NOTIFICATION_READING";
   private static final String CHANNEL = "runtime_readiness";
   private static final int NOTIFICATION = 8523;
   private static final Handler MAIN = new Handler(Looper.getMainLooper());
   private static RuntimeRetentionService active;
+  private static volatile boolean notificationReading;
   private boolean preparing;
   private String statusText = "준비 중 · 잠시만 기다려 주세요";
   private int failures;
@@ -34,6 +36,11 @@ public final class RuntimeRetentionService extends Service {
 
   static void runtimeChanged() {
     MAIN.post(() -> { if (active != null) active.checkRetention(); });
+  }
+
+  static void notificationPlaybackChanged(boolean reading) {
+    notificationReading = reading;
+    MAIN.post(() -> { if (active != null) active.updateNotification(); });
   }
 
   static boolean notificationAccess(Context c) {
@@ -61,6 +68,13 @@ public final class RuntimeRetentionService extends Service {
   @Override public int onStartCommand(Intent intent, int flags, int startId) {
     Log.i("YiwooRuntime", "RETENTION_SERVICE_START restarted=" + (intent == null)
         + " policy=" + EngineRetentionSettings.mode(this));
+    if (intent != null && ACTION_STOP_NOTIFICATION_READING.equals(intent.getAction())) {
+      NotificationPriorityState.interruptLowPriority();
+      notificationPlaybackChanged(false);
+      checkRetention();
+      return EngineRetentionSettings.mode(this) == EngineRetentionSettings.Mode.ALWAYS || automationEnabled(this)
+          ? START_STICKY : START_NOT_STICKY;
+    }
     boolean tick = intent != null && TimeAnnouncementScheduler.ACTION.equals(intent.getAction());
     boolean warm = intent != null && TimeAnnouncementScheduler.PREPARE.equals(intent.getAction());
     if (warm) TimeAnnouncementPreparation.prepare(this, intent.getLongExtra("due", 0));
@@ -141,19 +155,28 @@ public final class RuntimeRetentionService extends Service {
       if (features.length() > 0) features.append(" · ");
       features.append("시간 알려주기 동작 중");
     }
-    String summary = features.length() > 0 ? features.toString() : text;
-    return new Notification.Builder(this, CHANNEL).setSmallIcon(com.yiwoosolution.koreantts.R.drawable.ic_tts_status)
-        .setContentTitle("TTS 음성 서비스").setContentText(summary).setContentIntent(open)
-        .setStyle(new Notification.BigTextStyle().bigText(text + (features.length() > 0 ? "\n" + features : "")))
+    String summary = notificationReading ? "현재 알림 내용을 음성으로 읽고 있습니다" : features.length() > 0 ? features.toString() : text;
+    String title = notificationReading ? "알림을 읽고 있습니다" : "TTS 음성 서비스";
+    Notification.Builder builder = new Notification.Builder(this, CHANNEL).setSmallIcon(com.yiwoosolution.koreantts.R.drawable.ic_tts_status)
+        .setContentTitle(title).setContentText(summary).setContentIntent(open)
+        .setStyle(new Notification.BigTextStyle().bigText(notificationReading ? summary : text + (features.length() > 0 ? "\n" + features : "")))
         .setSubText(language + " · " + retention).setColor(0xff19634e)
         .setCategory(Notification.CATEGORY_SERVICE).setShowWhen(false)
-        .setOngoing(true).setOnlyAlertOnce(true).build();
+        .setOngoing(true).setOnlyAlertOnce(true);
+    if (notificationReading) {
+      Intent stopIntent = new Intent(this, RuntimeRetentionService.class).setAction(ACTION_STOP_NOTIFICATION_READING);
+      PendingIntent stop = PendingIntent.getService(this, 1, stopIntent,
+          PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+      builder.addAction(new Notification.Action.Builder(android.R.drawable.ic_media_pause, "읽기 중지", stop).build());
+    }
+    return builder.build();
   }
 
   @Override public void onDestroy() {
     if (active == this) active = null;
     MAIN.removeCallbacks(retry);
     TimeAnnouncementPlayer.interrupt("SERVICE_STOPPED");
+    notificationReading = false;
     TimeAnnouncementPreparation.cancelAll();
     stopForeground(true);
     Log.i("YiwooRuntime", "RETENTION_SERVICE_STOP");

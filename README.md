@@ -1,7 +1,10 @@
-# YIWOO TTS Android source preparation
+# YIWOO TTS Android 1.1.0
 
 This repository contains the Android application source corresponding to the
-YIWOO TTS 1.0.0 internal preparation build. It is not a final product release.
+YIWOO TTS 1.1.0 release candidate, source tag `v1.1.0-rc1`.
+It includes the Korean 1M and English LJSpeech 1M runtime integration,
+notification reading, time announcements, and pronunciation normalization.
+The model binaries are distributed separately from this source repository.
 
 ## License
 
@@ -27,15 +30,17 @@ Included:
 
 Excluded:
 
-- Korean and temporary English ONNX model binaries
+- Korean and English ONNX model binaries
 - Training corpora, checkpoints, caches, and training scripts
 - Pronunciation datasets and generated runtime lexicons
 - Internal analysis, device logs, screenshots, reports, and release artifacts
 
 The excluded runtime assets must be provisioned separately before the app can
-perform synthesis. The temporary evaluation voice used by internal builds is
-not distributed from this repository and is planned to be replaced by a
-separately trained LJSpeech-based voice.
+perform synthesis; `tools/provision_runtime_assets.py` copies them from an
+APK supplied by its recipient and checks the published asset hashes.
+The production English voice is trained separately from
+LJSpeech-derived data; neither its weights nor its training data are
+distributed from this source repository.
 
 ## Build preparation
 
@@ -48,7 +53,8 @@ runtime asset locations, and external signing configuration.
 
 ## Third-party source
 
-eSpeak NG is included under `app/src/main/cpp/espeak-ng`; its license is in
+eSpeak NG is included under `android/YiwooTtsCandidate/app/src/main/cpp/espeak-ng`; its license is in
 that directory and in `LICENSES/ESPEAK_NG_GPL-3.0.txt`. Other copied license
 texts are under `LICENSES/`. Publication of source code does not grant rights
-to separately sourced model weights or datasets.
+to separately sourced model weights or datasets. See `SOURCE_RELEASE.md`
+for component versions and the source/binary correspondence procedure.

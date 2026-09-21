@@ -91,7 +91,7 @@ final class PiperModelManager {
     try {
       for (PauseChunk chunk : chunks) {
         Log.i(TAG, "SYNTHESIS_CHUNK chars=" + chunk.text.length() + " index=" + outputs.size() + " total=" + chunks.size());
-        short[] pcm = synthesizeChunkLocked(chunk.text);
+        short[] pcm = synthesizeChunkLocked(chunk.text, 1f);
         outputs.add(pcm);
         sampleCount += pcm.length;
         if (Double.isFinite(lastInferenceMs)) inferenceMs += lastInferenceMs;
@@ -173,6 +173,10 @@ final class PiperModelManager {
   }
 
   private short[] synthesizeChunkLocked(String text, float rate) throws Exception {
+    return synthesizeChunkLocked(text, rate, false);
+  }
+
+  private short[] synthesizeChunkLocked(String text, float rate, boolean retry) throws Exception {
     lastInferenceMs = Double.NaN;
     lastPcmSamples = 0;
     boolean v1 = activeVoice.frontendVersion.startsWith("v1");
@@ -186,6 +190,10 @@ final class PiperModelManager {
     // user/canonical text unchanged, but supply that learned context only to
     // the model input for an otherwise unpunctuated Korean segment.
     String modelNormalized = v1 ? normalized : ensureModelTerminalContext(normalized);
+    boolean shortSpeech = !v1 && ShortSpeechGuard.applies(normalized);
+    // Leading context preserves isolated speech without asking the decoder to
+    // continue after terminal punctuation (which can generate a voiced tail).
+    if (shortSpeech) modelNormalized = (retry ? "  " : " ") + modelNormalized;
     if (!v1 && !modelNormalized.equals(normalized)
         && (context.getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
       Log.i(TAG, "KOREAN_MODEL_TERMINATOR_ADDED");
@@ -211,6 +219,17 @@ final class PiperModelManager {
         for (int i = 0; i < audio.length; i++) pcm[i] = (short) (Math.max(-1f, Math.min(1f, audio[i])) * 32767f);
         lastInferenceMs = (System.nanoTime() - onnxStart) / 1_000_000.0;
         lastPcmSamples = pcm.length;
+        if (shortSpeech) {
+          boolean audible = ShortSpeechGuard.hasSpeech(pcm, activeVoice.sampleRate);
+          Log.i(TAG, "SHORT_SPEECH_CHECK audible=" + audible + " retry=" + retry + " text=" + normalized);
+          if (!audible) {
+            if (retry) throw new IllegalStateException("SHORT_SPEECH_NEAR_SILENT: " + normalized);
+            double failedMs = lastInferenceMs;
+            short[] recovered = synthesizeChunkLocked(text, rate, true);
+            lastInferenceMs += failedMs;
+            return recovered;
+          }
+        }
         performance.observe(phonemes.length(), lastInferenceMs, pcm.length * 1000.0 / activeVoice.sampleRate, rate);
         Log.i(TAG, "ONNX_RUN voiceId=" + activeVoice.voiceId + " onnxMs=" + lastInferenceMs + " pcmSamples=" + pcm.length);
         lastUseElapsedMs = android.os.SystemClock.elapsedRealtime();
@@ -262,30 +281,15 @@ final class PiperModelManager {
     if (text == null) return result;
     String cleaned = text.replace("\r\n", "\n").replace('\r', '\n').trim();
     if (cleaned.isEmpty()) return result;
-    for (SentenceBoundaryPausePolicy.Segment segment : SentenceBoundaryPausePolicy.segment(cleaned)) {
+    for (SentenceBoundaryPausePolicy.Segment segment : KoreanStreamingChunkPlanner.contextualSegments(
+        cleaned, value -> KoreanFrontend.normalize(context, value),
+        value -> KoreanFrontend.phonemes(value).length())) {
       String remaining = segment.text;
       SentenceBoundaryPausePolicy.Boundary boundary = segment.boundary;
       // Hangul expands to multiple phonemes; character count cannot prove that
       // a sentence is below the model's token budget.
       while (!remaining.isEmpty() && tokenCount(remaining) > MAX_CHUNK_TOKENS) {
-        int cut = remaining.length();
-        while (cut > 1) {
-          int space = remaining.lastIndexOf(' ', cut - 1);
-          if (space <= 0) break;
-          String candidate = remaining.substring(0, space).trim();
-          if (tokenCount(candidate) <= MAX_CHUNK_TOKENS) { cut = space; break; }
-          cut = space;
-        }
-        if (cut == remaining.length() || cut <= 0) {
-          // A pathological unspaced sentence is split at a token-safe code-point boundary.
-          int low = 1, high = remaining.length(), best = 1;
-          while (low <= high) {
-            int mid = (low + high) >>> 1;
-            if (tokenCount(remaining.substring(0, mid)) <= MAX_CHUNK_TOKENS) { best = mid; low = mid + 1; }
-            else high = mid - 1;
-          }
-          cut = Math.max(1, best);
-        }
+        int cut = KoreanStreamingChunkPlanner.safetyCut(remaining, this::tokenCount);
         result.add(new PauseChunk(remaining.substring(0, cut).trim(), SentenceBoundaryPausePolicy.Boundary.NONE));
         remaining = remaining.substring(cut).trim();
       }

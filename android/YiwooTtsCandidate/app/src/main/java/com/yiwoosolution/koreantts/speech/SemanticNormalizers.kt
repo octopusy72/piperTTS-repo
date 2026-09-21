@@ -350,7 +350,7 @@ object SemanticNormalizers {
     fun normalizeNumber(source: String, nativeBeon: Boolean): String = readNumberWithCounter(source, nativeBeon)
 
     private fun readNumberWithCounter(source: String, nativeBeon: Boolean = false): String {
-        val match = Regex("(\\d[\\d,]*)\\s*(개월|시|분|개|명|살|병|번|호|가지)?").matchEntire(source) ?: return source
+        val match = Regex("(\\d[\\d,]*)\\s*(개월|시|분|개|명|살|병|번|호|가지|일)?").matchEntire(source) ?: return source
         val value = match.groupValues[1].replace(",", "").toLong()
         val counter = match.groupValues[2]
         val number = if ((counter in setOf("시", "개", "명", "살", "병", "가지") || counter == "번" && nativeBeon) && value in 1..99) {
@@ -358,7 +358,8 @@ object SemanticNormalizers {
         } else {
             NumberReader.sino(value)
         }
-        return if (counter.isEmpty()) number else "$number $counter"
+        // Keep the day suffix attached, matching the full calendar-date reader.
+        return if (counter.isEmpty()) number else if (counter == "일") "$number$counter" else "$number $counter"
     }
 
     private fun readEmail(source: String): String {

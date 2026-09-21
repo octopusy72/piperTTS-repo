@@ -21,7 +21,7 @@ final class NotificationSettings {
   private static SharedPreferences prefs(Context c) { return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
   private static SharedPreferences legacy(Context c) { return c.getSharedPreferences("product_settings", Context.MODE_PRIVATE); }
   static boolean enabled(Context c) { return prefs(c).contains(ENABLED) ? prefs(c).getBoolean(ENABLED, false) : legacy(c).getBoolean("notification_read_enabled", false); }
-  static void setEnabled(Context c, boolean value) { prefs(c).edit().putBoolean(ENABLED, value).apply(); legacy(c).edit().putBoolean("notification_read_enabled", value).apply(); RuntimeRetentionService.refresh(c); }
+  static void setEnabled(Context c, boolean value) { prefs(c).edit().putBoolean(ENABLED, value).apply(); legacy(c).edit().putBoolean("notification_read_enabled", value).apply(); if (!value) NotificationPriorityState.interruptLowPriority(); RuntimeRetentionService.refresh(c); }
   static String mode(Context c) { if (prefs(c).contains(MODE)) return prefs(c).getString(MODE, MODE_EXCLUDE); return "ONLY_ALLOWED".equals(legacy(c).getString("app_filter_mode", "")) ? MODE_ALLOW : MODE_EXCLUDE; }
   static void setMode(Context c, String value) { prefs(c).edit().putString(MODE, value).apply(); legacy(c).edit().putString("app_filter_mode", MODE_ALLOW.equals(value) ? "ONLY_ALLOWED" : "ALL_EXCEPT_BLOCKED").apply(); }
   static Set<String> packages(Context c) { if (prefs(c).contains(PACKAGES)) return Collections.unmodifiableSet(new HashSet<>(prefs(c).getStringSet(PACKAGES, Collections.emptySet()))); String key=MODE_ALLOW.equals(mode(c))?"allowed_packages":"blocked_packages"; return Collections.unmodifiableSet(new HashSet<>(legacy(c).getStringSet(key, Collections.emptySet()))); }

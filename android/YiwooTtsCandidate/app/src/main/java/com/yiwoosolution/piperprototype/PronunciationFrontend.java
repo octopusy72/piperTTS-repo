@@ -40,11 +40,13 @@ final class PronunciationFrontend {
       "volvo", "볼보", "bluetooth", "블루투스", "wi-fi", "와이파이", "instagram", "인스타그램",
       "galaxy", "갤럭시", "android", "안드로이드", "windows", "윈도우", "microsoft", "마이크로소프트",
       "openai", "오픈에이아이", "chatgpt", "챗지피티", "spotify", "스포티파이",
-      "notification", "알림", "settings", "설정", "example", "이그잼플", "com", "컴");
+      "notification", "노티피케이션", "settings", "세팅즈", "producer", "프로듀서",
+      "test", "테스트", "normal", "노멀", "example", "이그잼플", "com", "컴");
   private static final Map<String, String> PHRASES = mapOf(
-      "notification settings", "알림 설정", "notification permission", "알림 권한");
+      "notification settings", "노티피케이션 세팅즈", "notification permission", "노티피케이션 퍼미션");
   private static final Map<String, String> ACRONYMS = mapOf(
       "ai", "에이아이", "usb", "유에스비", "cpu", "씨피유", "gpu", "지피유", "ssd", "에스에스디", "hdmi", "에이치디엠아이",
+      "tv", "티브이",
       "ip", "아이피", "url", "유알엘", "http", "에이치티티피", "https", "에이치티티피에스", "dns", "디엔에스", "sdk", "에스디케이",
       "email", "이메일", "e-mail", "이메일", "ipv4", "아이피 버전 사");
   private static final Pattern LATIN_TOKEN = Pattern.compile("(?<![A-Za-z0-9-])[A-Za-z][A-Za-z0-9+.#'’]*(?:-[A-Za-z0-9+.#'’]+)*(?![A-Za-z0-9-])");
@@ -169,7 +171,10 @@ final class PronunciationFrontend {
       CmuDictTable table = cmu;
       if (table == null) synchronized (this) { if (cmu == null) cmu = CmuDictTable.load(appContext); table = cmu; }
       String phones = table.get(token);
-      if (phones != null) return transliterate(phones);
+      if (phones != null) {
+        String spoken = transliterate(phones);
+        if (spoken != null) return spoken;
+      }
     }
     return spellLetters(token);
   }
@@ -181,24 +186,12 @@ final class PronunciationFrontend {
     return out.toString();
   }
 
-  private static String transliterate(String value) {
-    String[] ps=value.split("\\s+"); StringBuilder out=new StringBuilder();
-    for(int i=0;i<ps.length;i++) {
-      String p=ps[i].replaceAll("[0-2]$",""); String onset=initial(p); String nucleus=null; String coda="";
-      if (isVowel(p)) { nucleus=vowel(p); onset=""; }
-      else if (i+1<ps.length && isVowel(ps[i+1].replaceAll("[0-2]$",""))) { nucleus=vowel(ps[++i].replaceAll("[0-2]$","")); }
-      else { if(out.length()>0) out.append(' '); out.append(spellPhone(p)); continue; }
-      if(i+1<ps.length) { String next=ps[i+1].replaceAll("[0-2]$",""); if(!isVowel(next)){ if(i+2>=ps.length || !isVowel(ps[i+2].replaceAll("[0-2]$",""))){coda=coda(next);i++;} } }
-      if(out.length()>0) out.append(' '); out.append(compose(onset,nucleus,coda));
-    }
-    return out.toString();
+  static String transliterate(String value) {
+    String result = LegacyCmuEnglishConverter.convertWord(
+        java.util.Arrays.asList(value.trim().split("\\s+")));
+    // Never pass raw ARPAbet or uncomposed jamo to the Korean phonemizer.
+    return result.matches("[가-힣]+") ? result : null;
   }
-  private static boolean isVowel(String p){return p.matches("AA|AE|AH|AO|AW|AY|EH|ER|EY|IH|IY|OW|OY|UH|UW|AX|IX|UX");}
-  private static String vowel(String p){if(p.equals("AE"))return "애";if(p.equals("EH")||p.equals("EY"))return "에";if(p.equals("AO")||p.equals("OW"))return "오";if(p.equals("UH")||p.equals("UW"))return "우";if(p.equals("IH")||p.equals("IY")||p.equals("EY"))return "이";if(p.equals("AH")||p.equals("ER")||p.equals("AX")||p.equals("IX"))return "어";return "아";}
-  private static String initial(String p){if(p.equals("B"))return "ㅂ";if(p.equals("P"))return "ㅍ";if(p.equals("D"))return "ㄷ";if(p.equals("T"))return "ㅌ";if(p.equals("G"))return "ㄱ";if(p.equals("K"))return "ㅋ";if(p.equals("F")||p.equals("V"))return "ㅂ";if(p.equals("S")||p.equals("SH"))return "ㅅ";if(p.equals("Z")||p.equals("ZH")||p.equals("JH"))return "ㅈ";if(p.equals("CH"))return "ㅊ";if(p.equals("M"))return "ㅁ";if(p.equals("N"))return "ㄴ";if(p.equals("NG"))return "ㅇ";if(p.equals("L")||p.equals("R"))return "ㄹ";if(p.equals("HH"))return "ㅎ";return "ㅇ";}
-  private static String coda(String p){if(p.equals("B")||p.equals("P")||p.equals("F")||p.equals("V"))return "ㅂ";if(p.equals("D")||p.equals("T")||p.equals("S")||p.equals("Z")||p.equals("SH")||p.equals("CH")||p.equals("JH"))return "ㅅ";if(p.equals("G")||p.equals("K"))return "ㄱ";if(p.equals("M"))return "ㅁ";if(p.equals("N"))return "ㄴ";if(p.equals("NG"))return "ㅇ";if(p.equals("L")||p.equals("R"))return "ㄹ";return "";}
-  private static String spellPhone(String p){return p.equals("F")?"에프":p.equals("V")?"브이":p;}
-  private static String compose(String onset,String vowel,String coda){int ii=onset.equals("ㄱ")?0:onset.equals("ㄴ")?2:onset.equals("ㄷ")?3:onset.equals("ㄹ")?5:onset.equals("ㅁ")?6:onset.equals("ㅂ")?7:onset.equals("ㅅ")?9:onset.equals("ㅈ")?12:onset.equals("ㅊ")?14:onset.equals("ㅋ")?15:onset.equals("ㅌ")?16:onset.equals("ㅍ")?17:onset.equals("ㅎ")?18:11;String[] vs={"아","애","어","에","오","우","이"};int vi=java.util.Arrays.asList(vs).indexOf(vowel);if(vi<0)vi=2;String[] fs={"","ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ"};int fi=java.util.Arrays.asList(fs).indexOf(coda);if(fi<0)fi=0;return String.valueOf((char)(0xAC00+(ii*21+vi)*28+fi));}
 
   private static String replace(String text, String key, String value, boolean allowKoreanAdjacency) {
     String left = allowKoreanAdjacency ? "(?<![A-Za-z0-9-])" : "(?<![A-Za-z0-9-])";

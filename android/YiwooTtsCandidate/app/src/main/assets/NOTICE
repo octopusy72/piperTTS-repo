@@ -1,25 +1,24 @@
-YIWOO TTS 1.0.0 Preparation Build
-
-This installable build is for internal preparation and evaluation. It is
-signed with a dedicated YIWOO release certificate but is not an externally
-approved release artifact.
+YIWOO TTS 1.1.0 Release Candidate
 
 YIWOO TTS Android application source
 Copyright (C) 2026 Yiwoo Solution
 Licensed under GNU GPL version 3 or, at your option, any later version.
 Corresponding source: https://github.com/octopusy72/piperTTS-repo
+Source version: v1.1.0-rc1
+https://github.com/octopusy72/piperTTS-repo/tree/v1.1.0-rc1
+Full license texts are available from this screen's license menu and are
+included in the APK assets/licenses directory.
 
 Model weights, training datasets, generated pronunciation data, signing
 material, names, and logos are separate assets and are not covered by the
 application source-code license unless explicitly stated otherwise.
 
-English model attribution:
-en_US-lessac-low is a Piper voice artifact sourced from the v1.0.0 voice
-collection. The model card attributes training to the Blizzard 2013 Lessac
-dataset: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/
-The associated research licence is restricted to research purposes. This
-temporary English evaluation model must be replaced before external or
-commercial distribution. YIWOO does not bundle the raw dataset.
+English model provenance:
+The YIWOO English voice was trained by Yiwoo Solution from LJSpeech-1.1.
+The LJSpeech project describes its audio, text, and annotations as public
+domain and states that there are no restrictions on use. Dataset provenance:
+https://keithito.com/LJ-Speech-Dataset
+YIWOO does not bundle the raw dataset.
 
 
 ONNX Runtime
@@ -75,8 +74,15 @@ POSSIBILITY OF SUCH DAMAGE.
 eSpeak NG
 Copyright holders are listed in the bundled eSpeak NG source distribution.
 Licensed under the GNU General Public License version 3 or later. Corresponding
-source for this preparation build is published at:
+source for this release candidate is published at:
 https://github.com/octopusy72/piperTTS-repo
+
+Bundled eSpeak NG version: 1.52.0.1. Its Unicode data and BSD-licensed
+components retain their upstream notices in the full license menu.
+ONNX Runtime version: 1.29.0. Upstream ThirdPartyNotices.txt is included
+unchanged in the full license menu.
+Kotlin standard library: Copyright JetBrains s.r.o. and Kotlin Programming
+Language contributors. Apache License 2.0.
 
 
 Sonic Java audio time stretching / pitch shifting

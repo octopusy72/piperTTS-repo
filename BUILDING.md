@@ -10,6 +10,17 @@
 
 ## Build
 
+For synthesis, first provision the runtime data from your separately supplied
+1.1.0 RC APK (Python 3, standard library only):
+
+```bash
+python3 tools/provision_runtime_assets.py /path/to/YiwooTTS-1.1.0-rc1.apk
+```
+
+The script accepts only the asset paths and SHA-256 values in
+`runtime-assets.json`. It never extracts arbitrary ZIP paths or signing data.
+It does not fetch data or change any asset license.
+
 ```bash
 cd android/YiwooTtsCandidate
 ./gradlew :app:assembleDebug
@@ -52,3 +63,9 @@ keyPassword=...
 ```
 
 Never commit this file, a keystore, or signing credentials.
+
+Without the distributor's signing material, use the debug build or your own
+release certificate. Android will not upgrade an installed APK signed with a
+different certificate. Use a separate test device/profile for your own build
+to avoid deleting existing user settings. Distributor private keys are not
+required to compile or sign your own build.

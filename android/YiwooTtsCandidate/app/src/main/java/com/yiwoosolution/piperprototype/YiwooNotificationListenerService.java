@@ -41,7 +41,7 @@ public final class YiwooNotificationListenerService extends NotificationListener
     super.onListenerConnected();
     Log.i(TAG, "LISTENER_CONNECTED enabled=" + NotificationSettings.enabled(this));
     RuntimeRetentionService.refresh(this);
-    NotificationPriorityState.registerInterrupt(() -> handler.post(() -> { if (tts != null) { tts.stop(); pending = 0; } }));
+    NotificationPriorityState.registerInterrupt(() -> handler.post(this::stopNotificationSpeech));
     if (NotificationSettings.enabled(this)) {
       ensureTts();
       // Reconnect must honor the persisted retention policy without starting
@@ -156,6 +156,14 @@ public final class YiwooNotificationListenerService extends NotificationListener
     Log.i(TAG, "NOTIFICATION_QUEUED chars=" + text.length() + " pending=" + pending);
   }
 
+  private synchronized void stopNotificationSpeech() {
+    if (burstTask != null) handler.removeCallbacks(burstTask);
+    burstTask = null; burstCount = 0; burstFirstText = null; waitingText = null; pending = 0;
+    if (tts != null) tts.stop();
+    RuntimeRetentionService.notificationPlaybackChanged(false);
+    Log.i(TAG, "YIWOO_NOTIF_READING_STOPPED");
+  }
+
   /** Legacy behavior: globally coalesce notifications arriving within 550 ms. */
   private synchronized void offerBurst(String text) {
     if (burstCount == 0) burstFirstText = text;
@@ -180,9 +188,10 @@ public final class YiwooNotificationListenerService extends NotificationListener
     if (tts != null) return;
     tts = new TextToSpeech(this, result -> handler.postDelayed(() -> finishTtsInit(result, 0), 300L), getPackageName());
     tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-      @Override public void onStart(String id) { Log.i(TAG, "YIWOO_NOTIF_CALLBACK_START"); }
-      @Override public void onDone(String id) { Log.i(TAG, "YIWOO_NOTIF_CALLBACK_DONE"); synchronized (YiwooNotificationListenerService.this) { if (pending > 0) pending--; } }
-      @Override public void onError(String id) { Log.i(TAG, "YIWOO_NOTIF_CALLBACK_ERROR"); synchronized (YiwooNotificationListenerService.this) { if (pending > 0) pending--; } }
+      @Override public void onStart(String id) { RuntimeRetentionService.notificationPlaybackChanged(true); Log.i(TAG, "YIWOO_NOTIF_CALLBACK_START"); }
+      @Override public void onDone(String id) { Log.i(TAG, "YIWOO_NOTIF_CALLBACK_DONE"); synchronized (YiwooNotificationListenerService.this) { if (pending > 0) pending--; if (pending == 0) RuntimeRetentionService.notificationPlaybackChanged(false); } }
+      @Override public void onError(String id) { Log.i(TAG, "YIWOO_NOTIF_CALLBACK_ERROR"); synchronized (YiwooNotificationListenerService.this) { if (pending > 0) pending--; if (pending == 0) RuntimeRetentionService.notificationPlaybackChanged(false); } }
+      @Override public void onStop(String id, boolean interrupted) { synchronized (YiwooNotificationListenerService.this) { pending = 0; RuntimeRetentionService.notificationPlaybackChanged(false); } Log.i(TAG, "YIWOO_NOTIF_CALLBACK_STOP interrupted=" + interrupted); }
     });
   }
 
@@ -239,6 +248,7 @@ public final class YiwooNotificationListenerService extends NotificationListener
       if (burstTask != null) handler.removeCallbacks(burstTask);
       burstTask = null; burstCount = 0; burstFirstText = null;
       if (tts != null) { tts.stop(); tts.shutdown(); tts = null; }
+      RuntimeRetentionService.notificationPlaybackChanged(false);
     }
     super.onDestroy();
     Log.i(TAG, "LISTENER_DESTROYED");

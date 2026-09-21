@@ -83,18 +83,18 @@ final class LegacyCmuEnglishConverter {
     return result;
   }
 
-  private static String convertWord(List<String> raw) {
+  static String convertWord(List<String> raw) {
     List<String> phones = adjust(raw);
     StringBuilder out = new StringBuilder();
     for (int i = 0; i < phones.size(); i++) {
       String p = phones.get(i);
       String prev = i > 0 ? phones.get(i - 1) : "^";
       String next = i + 1 < phones.size() ? phones.get(i + 1) : "$";
-      String next2 = i + 2 < phones.size() ? phones.get(i + 1) : "$";
+      String next2 = i + 2 < phones.size() ? phones.get(i + 2) : "$";
       if (p.equals("P") || p.equals("T") || p.equals("K")) {
         if (starts(prev, "AE", "AH", "AX", "EH", "IH", "IX", "UH") && next.equals("$")) out.append(jong(p));
-        else if (starts(prev, "AE", "AH", "AX", "EH", "IH", "IX", "UH") && !consonantOrDollar(first(next))) out.append(jong(p));
-        else if (consonantOrDollar(first(next)) || next.startsWith("Y")) out.append(choseong(p)).append('ᅳ');
+        else if ((p.equals("K") || p.equals("P")) && starts(prev, "AE", "AH", "EH", "IH", "UH") && starts(next, "S", "T")) out.append(jong(p));
+        else if (consonantOrDollar(first(next))) out.append(choseong(p)).append('ᅳ');
         else out.append(choseong(p));
       } else if (p.equals("B") || p.equals("D") || p.equals("G")) {
         out.append(choseong(p)); if (consonantOrDollar(first(next))) out.append('ᅳ');
@@ -128,7 +128,7 @@ final class LegacyCmuEnglishConverter {
   private static boolean starts(String value, String... prefixes) { for (String p : prefixes) if (value.startsWith(p)) return true; return false; }
   private static char first(String value) { return value.isEmpty() ? '$' : value.charAt(0); }
   private static boolean vowel(char c) { return c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U' || c == 'Y'; }
-  private static boolean consonant(char c) { return "BCDFGHJKLMNPQRSTVXZ".indexOf(c) >= 0; }
+  private static boolean consonant(char c) { return "BCDFGHJKLMNPQRSTVWXZ".indexOf(c) >= 0; }
   private static boolean consonantOrDollar(char c) { return c == '$' || consonant(c); }
 
   private static String choseong(String p) { switch (p) {
@@ -169,7 +169,10 @@ final class LegacyCmuEnglishConverter {
         int oi = onsets.indexOf(a), vi = vowels.indexOf(b), ti = c == '\u0000' ? 0 : codas.indexOf(c);
         out.append((char)(0xAC00 + oi * 588 + vi * 28 + ti));
       } else if (vowels.indexOf(a) >= 0) {
-        int vi = vowels.indexOf(a); out.append((char)(0xAC00 + 11 * 588 + vi * 28));
+        int vi = vowels.indexOf(a);
+        int ti = 0;
+        if (i < text.length() && codas.indexOf(text.charAt(i)) > 0) ti = codas.indexOf(text.charAt(i++));
+        out.append((char)(0xAC00 + 11 * 588 + vi * 28 + ti));
       } else out.append(a);
     }
     return out.toString();

@@ -60,11 +60,14 @@ final class LegacyKoreanNormalizerBridge {
     return LegacyTextNormalizer.adaptLegacyOutputForRaw59(legacyConverted);
   }
 
-  private static boolean isPlainHangulSentence(String value) {
+  static boolean isPlainHangulSentence(String value) {
     if (value == null || value.isEmpty()) return true;
     for (int i = 0; i < value.length(); i++) {
       char c = value.charAt(i);
-      if ((c >= '\uAC00' && c <= '\uD7A3') || Character.isWhitespace(c) || ".,!?'\u2019\u2018\u2026".indexOf(c) >= 0) continue;
+      // Only bypass normalization for punctuation present in the frozen model
+      // vocabulary. Quotes and ellipses need the canonical punctuation rules.
+      if ((c >= '\uAC00' && c <= '\uD7A3') || c == ' ' || c == '\t' || c == '\n' || c == '\r'
+          || ".,!?".indexOf(c) >= 0) continue;
       return false;
     }
     return true;

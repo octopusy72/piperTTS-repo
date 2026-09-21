@@ -10,7 +10,7 @@ if (hasReleaseSigning) {
 
 android { namespace 'com.yiwoosolution.koreantts'; compileSdk 36
     defaultConfig {
-        applicationId 'com.yiwoosolution.koreantts'; minSdk 28; targetSdk 35; versionCode 10000; versionName '1.0.0'
+        applicationId 'com.yiwoosolution.koreantts'; minSdk 28; targetSdk 35; versionCode 10100; versionName '1.1.0'
         testInstrumentationRunner 'com.yiwoosolution.piperprototype.RuntimeLifecycleInstrumentation'
         externalNativeBuild { cmake { cppFlags '-std=c++17' } }
         ndk { abiFilters 'arm64-v8a' }
@@ -40,6 +40,8 @@ android { namespace 'com.yiwoosolution.koreantts'; compileSdk 36
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    // Retain experimental clips locally, but unified synthesis never packages or plays them.
+    androidResources { ignoreAssetsPattern 'list_labels' }
     packaging { jniLibs { useLegacyPackaging true } }
 }
 

@@ -13,6 +13,11 @@ This public repository intentionally excludes:
 - Generated pronunciation lexicons and CMUdict runtime tables
 - Release signing keys and credentials
 
+The current English runtime model is a separately trained LJSpeech-derived
+voice. Its versioned filename may appear in application source as a runtime
+contract, but the weight file itself remains an independently distributed
+asset with separately recorded provenance.
+
 Each model or data asset distributed with an application build must have its
 own documented provenance and distribution permission. A model filename or
 reference in source code is not a grant of rights to that model.

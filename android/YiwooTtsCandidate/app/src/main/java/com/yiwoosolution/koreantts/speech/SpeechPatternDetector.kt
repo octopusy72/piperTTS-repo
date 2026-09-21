@@ -49,7 +49,7 @@ class SpeechPatternDetector(private val classifier: ContextClassifier = ContextC
         Rule(SpeechSpanType.FRACTION, Regex("\\d+/\\d+"), 68),
         Rule(SpeechSpanType.DECIMAL, Regex("\\d+\\.\\d+"), 60),
         Rule(SpeechSpanType.ELLIPSIS, Regex("(?:\\.{2,}|…+)"), 50),
-        Rule(SpeechSpanType.NUMBER, Regex("\\d[\\d,]*\\s*(?:개월|시|분|개|명|살|병|번|호|가지)?"), 10),
+        Rule(SpeechSpanType.NUMBER, Regex("\\d[\\d,]*\\s*(?:개월|시|분|개|명|살|병|번|호|가지|일)?"), 10),
     )
 
     fun detect(text: String): List<SpeechSpan> {

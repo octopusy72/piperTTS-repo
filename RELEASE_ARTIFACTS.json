@@ -1,0 +1,27 @@
+{
+  "version": "1.1.0",
+  "version_code": 10100,
+  "source_tag": "v1.1.0-rc1",
+  "artifacts": [
+    {
+      "file": "LICENSE",
+      "bytes": 35147,
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    {
+      "file": "NOTICE",
+      "bytes": 15669,
+      "sha256": "b167ed1dcf095e3bf5b31a8811e2ec23ca65bef8cce84b31a6af719777ab2f0e"
+    },
+    {
+      "file": "YIWOO_TTS_User_Guide.pdf",
+      "bytes": 434211,
+      "sha256": "b57b241588f1fa7a57ac601ea3657b51b49a952dd411dad975e8cd0e7ef47631"
+    },
+    {
+      "file": "YiwooTTS-1.1.0-rc1.apk",
+      "bytes": 142467439,
+      "sha256": "b9b6e04cb0fa20d2062fa3b28506d169df8e45361e7b685949b836b391fe22f7"
+    }
+  ]
+}

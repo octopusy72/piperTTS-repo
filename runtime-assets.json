@@ -1,0 +1,60 @@
+{
+  "source_tag": "v1.1.0-rc1",
+  "assets": [
+    {
+      "path": "models/en_ljspeech_piper_1m.onnx",
+      "bytes": 63446931,
+      "sha256": "9dc11ae3388f9a9d0ae6f0b5e59a3a05c5df35d462044e7899c316d091b6d226"
+    },
+    {
+      "path": "models/en_ljspeech_piper_1m.onnx.json",
+      "bytes": 5036,
+      "sha256": "3e42f88be698d06b82f0bf2d2c147cf42ea67863557d72d7a803767b65885987"
+    },
+    {
+      "path": "models/ko_8523_piper_v2_1000k.onnx",
+      "bytes": 63367058,
+      "sha256": "693871af8f7c0988cca9f25c1db0102c0c82a70df83fa964e9bda2fd2c424df1"
+    },
+    {
+      "path": "models/model_descriptor.json",
+      "bytes": 512,
+      "sha256": "f09b45757c454805906d37bbc5cd7ee7bcc6b8a047f70f55d98ad689cebfcb30"
+    },
+    {
+      "path": "models/phoneme_map_v2.json",
+      "bytes": 1333,
+      "sha256": "cbfb710841de15ea25cb35b8962da1a5deb1e08708339dc3afdf8c45c79ff8d4"
+    },
+    {
+      "path": "pronunciation/cmudict_runtime.bin",
+      "bytes": 4086690,
+      "sha256": "21d853445519f0efa7c259b18f611db89decd5eb8c98720c0d09f23477902e1a"
+    },
+    {
+      "path": "pronunciation/runtime_lexicon_commercial_safe.bin",
+      "bytes": 2515353,
+      "sha256": "3e75f0e1fa8f69199a07e89607326eb2767496e5dfdd8199b86da1c79db4aaf5"
+    },
+    {
+      "path": "g2pkk/cmudict.dict",
+      "bytes": 3820830,
+      "sha256": "cad209c39eb87677d64e93d97f8eed10b7e6f9bdd42de8e7ca8efc8e17d62e8a"
+    },
+    {
+      "path": "normalization/android_loanwords.tsv",
+      "bytes": 32113,
+      "sha256": "6ef9af6007887491e2f84bb29c5cd39f20f555562f09777759ac57fd8017a383"
+    },
+    {
+      "path": "normalization/emoji_names_en.json",
+      "bytes": 1010,
+      "sha256": "9dee4b68c3e5a52a6d5506972f68769ade7d0f778dbedbf4bbbf528343811e6d"
+    },
+    {
+      "path": "normalization/emoji_names_ko.json",
+      "bytes": 1056,
+      "sha256": "148bfb39a614dc9c7ef2ea2a4301e23d4e185992beb2afd69b44ea216758ded5"
+    }
+  ]
+}

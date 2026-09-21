@@ -6,9 +6,12 @@ import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtSession;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.LongBuffer;
+import java.security.MessageDigest;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,15 +21,23 @@ import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/** English Lessac frontend + ONNX session, separate from Korean RAW59. */
+/** English LJSpeech frontend + ONNX session, separate from Korean RAW59. */
 final class EnglishModelManager {
   private static final String TAG = "YiwooPiperEn";
+  private static final String MODEL_ASSET = "models/en_ljspeech_piper_1m.onnx";
+  private static final String CONFIG_ASSET = "models/en_ljspeech_piper_1m.onnx.json";
+  private static final String CACHE_NAME = "en_ljspeech_piper_1m.onnx";
+  private static final long MODEL_SIZE = 63_446_931L;
+  private static final String MODEL_SHA256 = "9dc11ae3388f9a9d0ae6f0b5e59a3a05c5df35d462044e7899c316d091b6d226";
+  private static final int MAX_STREAMING_PHONEMES = 56;
+  private static final int MIN_SPLIT_PHONEMES = 24;
+  private static final long MAX_STARTUP_RESERVE_MS = 2_500L;
   private static final Pattern LANGUAGE_MARK = Pattern.compile("\\([^)]*\\)");
   private final Context context;
   private OrtEnvironment environment;
   private OrtSession session;
   private Map<String, long[]> ids;
-  private int sampleRate = 16000;
+  private int sampleRate = 22050;
   private int numSpeakers = 1;
   private float noiseScale = 0.667f, lengthScale = 1f, noiseW = 0.8f;
   private volatile boolean initialized;
@@ -100,7 +111,7 @@ final class EnglishModelManager {
     Log.i(TAG, "ENGLISH_TRACE T5_ESPEAK_INIT_START ns=" + espeakStart);
     EnglishEspeak.ensureReady(context);
     Log.i(TAG, "ENGLISH_TRACE T6_ESPEAK_INIT_END ns=" + System.nanoTime() + " elapsedMs=" + ((System.nanoTime() - espeakStart) / 1_000_000.0));
-    JSONObject config = new JSONObject(readAsset("models/en_US-lessac-low.onnx.json"));
+    JSONObject config = new JSONObject(readAsset(CONFIG_ASSET));
     JSONObject audio = config.getJSONObject("audio");
     sampleRate = audio.getInt("sample_rate");
     numSpeakers = config.optInt("num_speakers", 1);
@@ -111,10 +122,10 @@ final class EnglishModelManager {
       noiseW = (float) inference.optDouble("noise_w", noiseW);
     }
     ids = loadIds(config.getJSONObject("phoneme_id_map"));
-    if (ids.size() != 154 || !ids.containsKey("^") || !ids.containsKey("_") || !ids.containsKey("$")) throw new IllegalStateException("ENGLISH_LESSAC_MAP_CONTRACT_MISMATCH");
+    if (ids.size() != 166 || !ids.containsKey("^") || !ids.containsKey("_") || !ids.containsKey("$")) throw new IllegalStateException("ENGLISH_LJSPEECH_MAP_CONTRACT_MISMATCH");
     long modelStart = System.nanoTime();
     Log.i(TAG, "ENGLISH_TRACE T1_MODEL_ASSET_START ns=" + modelStart);
-    File model = copyAsset("models/en_US-lessac-low.onnx", "en_lessac_low.onnx");
+    File model = copyVerifiedModel();
     Log.i(TAG, "ENGLISH_TRACE T2_MODEL_ASSET_READY ns=" + System.nanoTime() + " elapsedMs=" + ((System.nanoTime() - modelStart) / 1_000_000.0));
     long sessionStart = System.nanoTime();
     Log.i(TAG, "ENGLISH_TRACE T3_ORT_SESSION_START ns=" + sessionStart);
@@ -123,7 +134,7 @@ final class EnglishModelManager {
     Log.i(TAG, "ENGLISH_TRACE T4_ORT_SESSION_END ns=" + System.nanoTime() + " elapsedMs=" + ((System.nanoTime() - sessionStart) / 1_000_000.0));
     initialized = true;
     initState = "READY";
-    Log.i(TAG, "ENGLISH_MODEL_READY model=en_US-lessac-low sampleRate=" + sampleRate + " speakers=" + numSpeakers + " mapSymbols=" + ids.size() + " loadMs=" + ((System.nanoTime() - started) / 1_000_000.0));
+    Log.i(TAG, "ENGLISH_MODEL_READY model=en_ljspeech_piper_1m sampleRate=" + sampleRate + " speakers=" + numSpeakers + " mapSymbols=" + ids.size() + " sha256=" + MODEL_SHA256 + " loadMs=" + ((System.nanoTime() - started) / 1_000_000.0));
   }
 
   void synthesizeChunks(String text, LongTextStreamingSynthesizer.ChunkListener listener) throws Exception {
@@ -150,6 +161,11 @@ final class EnglishModelManager {
       short[] pcm = run(sequence, rate);
       totalInference += lastInferenceMs; totalSamples += pcm.length;
       int pause = i == segments.size() - 1 ? 0 : SentenceBoundaryPausePolicy.effectivePause(context, segment.boundary);
+      if (i == 0 && segments.size() > 1) {
+        long pcmMs = Math.round(pcm.length * 1000.0 / sampleRate);
+        // The stream releases this reserve early when the second chunk is ready.
+        listener.onStartupReserve(Math.min(MAX_STARTUP_RESERVE_MS, Math.max(0L, pcmMs)));
+      }
       Log.i(TAG, "ENGLISH_CHUNK index=" + i + " tokens=" + sequence.length + " pcmFrames=" + pcm.length + " ortMs=" + lastInferenceMs + " pauseMs=" + pause);
       listener.onChunk(pcm, i, segments.size(), lastInferenceMs, pause);
     }
@@ -187,10 +203,39 @@ final class EnglishModelManager {
       for (int i = 0; i < phones.length();) { int cp = phones.codePointAt(i); i += Character.charCount(cp); symbols.add(new String(Character.toChars(cp))); }
       if (",".equals(parts[1]) || ":".equals(parts[1]) || ";".equals(parts[1])) symbols.add(" ");
       SentenceBoundaryPausePolicy.Boundary boundary = "1".equals(parts[2]) ? (".".equals(parts[1]) || "?".equals(parts[1]) || "!".equals(parts[1]) ? SentenceBoundaryPausePolicy.Boundary.SENTENCE : SentenceBoundaryPausePolicy.Boundary.NONE) : SentenceBoundaryPausePolicy.Boundary.NONE;
-      if (!symbols.isEmpty()) out.add(new Segment(symbols, boundary));
+      if (!symbols.isEmpty()) out.addAll(splitForStreaming(symbols, boundary));
     }
     if (!out.isEmpty()) { Segment last = out.get(out.size() - 1); out.set(out.size() - 1, new Segment(last.phonemes, SentenceBoundaryPausePolicy.Boundary.NONE)); }
     return out;
+  }
+
+  static List<Segment> splitForStreaming(List<String> symbols, SentenceBoundaryPausePolicy.Boundary boundary) {
+    List<Segment> result = new ArrayList<>();
+    int start = 0;
+    while (symbols.size() - start > MAX_STREAMING_PHONEMES) {
+      int remaining = symbols.size() - start;
+      int pieces = (remaining + MAX_STREAMING_PHONEMES - 1) / MAX_STREAMING_PHONEMES;
+      int target = start + remaining / pieces;
+      int limit = Math.min(symbols.size() - 1, start + MAX_STREAMING_PHONEMES);
+      int cut = -1;
+      // Balance the remainder as well, so a short final word is not synthesized alone.
+      for (int i = start + 1; i <= limit; i++) {
+        if (" ".equals(symbols.get(i)) && i - start >= MIN_SPLIT_PHONEMES
+            && symbols.size() - i - 1 >= MIN_SPLIT_PHONEMES
+            && (cut < 0 || Math.abs(i - target) < Math.abs(cut - target))) cut = i;
+      }
+      // Never split an IPA word or combining sequence merely to meet a size target.
+      if (cut <= start) break;
+      List<String> piece = new ArrayList<>(symbols.subList(start, cut));
+      if (!piece.isEmpty()) result.add(new Segment(piece, SentenceBoundaryPausePolicy.Boundary.NONE));
+      start = cut + 1;
+    }
+    if (start < symbols.size()) {
+      List<String> piece = new ArrayList<>(symbols.subList(start, symbols.size()));
+      if (!piece.isEmpty()) result.add(new Segment(piece, boundary));
+    }
+    if (result.isEmpty() && !symbols.isEmpty()) result.add(new Segment(new ArrayList<>(symbols), boundary));
+    return result;
   }
 
   private long[] idsFor(List<String> symbols) throws Exception {
@@ -205,9 +250,59 @@ final class EnglishModelManager {
     while (keys.hasNext()) { String key = keys.next(); JSONArray array = object.getJSONArray(key); long[] values = new long[array.length()]; for (int i = 0; i < values.length; i++) values[i] = array.getLong(i); result.put(key, values); }
     return result;
   }
-  private String readAsset(String path) throws Exception { try (InputStream in = context.getAssets().open(path)) { byte[] b = new byte[in.available()]; int n = in.read(b); return new String(b, 0, n, "UTF-8"); } }
-  private File copyAsset(String asset, String name) throws Exception { File file = new File(context.getCacheDir(), name); if (file.isFile() && file.length() > 100_000_000) return file; try (InputStream in = context.getAssets().open(asset); FileOutputStream out = new FileOutputStream(file)) { byte[] b = new byte[8192]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n); } return file; }
+  private String readAsset(String path) throws Exception {
+    try (InputStream in = context.getAssets().open(path); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      byte[] buffer = new byte[8192]; int count;
+      while ((count = in.read(buffer)) != -1) out.write(buffer, 0, count);
+      return out.toString("UTF-8");
+    }
+  }
+
+  private File copyVerifiedModel() throws Exception {
+    File model = new File(context.getCacheDir(), CACHE_NAME);
+    if (isExpectedModel(model)) {
+      removeLegacyCache();
+      return model;
+    }
+    File temporary = new File(context.getCacheDir(), CACHE_NAME + ".tmp");
+    if (temporary.exists() && !temporary.delete()) throw new IllegalStateException("STALE_ENGLISH_MODEL_TEMP_DELETE_FAILED");
+    try (InputStream in = context.getAssets().open(MODEL_ASSET); FileOutputStream out = new FileOutputStream(temporary)) {
+      byte[] buffer = new byte[64 * 1024]; int count;
+      while ((count = in.read(buffer)) != -1) out.write(buffer, 0, count);
+      out.getFD().sync();
+    }
+    if (!isExpectedModel(temporary)) {
+      temporary.delete();
+      throw new IllegalStateException("ENGLISH_MODEL_ASSET_INTEGRITY_FAILED");
+    }
+    if (model.exists() && !model.delete()) throw new IllegalStateException("STALE_ENGLISH_MODEL_DELETE_FAILED");
+    if (!temporary.renameTo(model)) throw new IllegalStateException("ENGLISH_MODEL_ATOMIC_INSTALL_FAILED");
+    removeLegacyCache();
+    return model;
+  }
+
+  private void removeLegacyCache() {
+    File legacy = new File(context.getCacheDir(), "en_lessac_low.onnx");
+    if (legacy.exists() && !legacy.delete()) Log.w(TAG, "LEGACY_ENGLISH_CACHE_DELETE_FAILED path=" + legacy);
+    else if (!legacy.exists()) Log.i(TAG, "LEGACY_ENGLISH_CACHE_ABSENT");
+    else Log.i(TAG, "LEGACY_ENGLISH_CACHE_REMOVED");
+  }
+
+  private static boolean isExpectedModel(File model) throws Exception {
+    return model.isFile() && model.length() == MODEL_SIZE && MODEL_SHA256.equals(sha256(model));
+  }
+
+  private static String sha256(File file) throws Exception {
+    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    try (InputStream in = new FileInputStream(file)) {
+      byte[] buffer = new byte[64 * 1024]; int count;
+      while ((count = in.read(buffer)) != -1) digest.update(buffer, 0, count);
+    }
+    StringBuilder result = new StringBuilder(64);
+    for (byte value : digest.digest()) result.append(String.format(java.util.Locale.US, "%02x", value & 0xff));
+    return result.toString();
+  }
   static double lastInferenceMs() { return lastInferenceMs; }
   static int lastPcmSamples() { return lastPcmSamples; }
-  private static final class Segment { final List<String> phonemes; final SentenceBoundaryPausePolicy.Boundary boundary; Segment(List<String> p, SentenceBoundaryPausePolicy.Boundary b) { phonemes = p; boundary = b; } }
+  static final class Segment { final List<String> phonemes; final SentenceBoundaryPausePolicy.Boundary boundary; Segment(List<String> p, SentenceBoundaryPausePolicy.Boundary b) { phonemes = p; boundary = b; } }
 }
