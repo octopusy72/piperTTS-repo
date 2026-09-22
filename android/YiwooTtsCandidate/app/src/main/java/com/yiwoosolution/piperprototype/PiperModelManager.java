@@ -241,7 +241,10 @@ final class PiperModelManager {
   /** Applies the runtime pronunciation layer once, before sentence splitting and Korean normalization. */
   private String prepareKoreanText(String text) {
     if (activeVoice.frontendVersion.startsWith("v1")) return text;
-    String resolved = PronunciationFrontend.shared(context).normalize(text);
+    // User rules must see the original token before CMUdict/acronym fallbacks
+    // consume it. Apply them exactly once to avoid chained substitutions.
+    String customized = ReadingRuleEngine.apply(text, new ReadingRuleRepository(context));
+    String resolved = PronunciationFrontend.shared(context).normalize(customized);
     if (!resolved.equals(text) && (context.getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
       Log.i(TAG, "PRONUNCIATION_FRONTEND_APPLIED changed=true inputChars=" + (text == null ? 0 : text.length()) + " outputChars=" + resolved.length() + " output=" + resolved);
     }

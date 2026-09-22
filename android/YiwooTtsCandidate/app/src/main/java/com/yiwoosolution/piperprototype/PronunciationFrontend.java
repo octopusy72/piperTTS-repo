@@ -49,6 +49,15 @@ final class PronunciationFrontend {
       "tv", "티브이",
       "ip", "아이피", "url", "유알엘", "http", "에이치티티피", "https", "에이치티티피에스", "dns", "디엔에스", "sdk", "에스디케이",
       "email", "이메일", "e-mail", "이메일", "ipv4", "아이피 버전 사");
+  /** Case-sensitive baseball notation; lowercase war/era remain ordinary English words. */
+  private static final Map<String, String> BASEBALL_ACRONYMS = mapOf(
+      "OPS+", "오피에스 플러스", "ERA+", "이알에이 플러스", "wRC+", "더블유알씨 플러스",
+      "OPS", "오피에스", "ERA", "이알에이", "RBI", "알비아이", "AVG", "에이브이지",
+      "OBP", "오비피", "SLG", "에스엘지", "WHIP", "윕", "WAR", "워", "FIP", "에프아이피",
+      "BABIP", "바빕", "WPA", "더블유피에이", "KBO", "케이비오", "MLB", "엠엘비",
+      "NPB", "엔피비", "HR", "에이치알", "AB", "에이비", "PA", "피에이", "HBP", "에이치비피",
+      "BB", "비비", "SO", "에스오", "SB", "에스비", "CS", "씨에스", "IP", "아이피",
+      "SV", "에스브이", "HLD", "에이치엘디", "QS", "큐에스");
   private static final Pattern LATIN_TOKEN = Pattern.compile("(?<![A-Za-z0-9-])[A-Za-z][A-Za-z0-9+.#'’]*(?:-[A-Za-z0-9+.#'’]+)*(?![A-Za-z0-9-])");
 
   private PronunciationFrontend(Context context) {
@@ -147,6 +156,9 @@ final class PronunciationFrontend {
     for (Map.Entry<String, String> entry : phrases) {
       out = replace(out, entry.getKey(), entry.getValue(), true);
     }
+    for (Map.Entry<String, String> entry : BASEBALL_ACRONYMS.entrySet()) {
+      out = replaceCaseSensitive(out, entry.getKey(), entry.getValue());
+    }
     for (Map.Entry<String, String> entry : ACRONYMS.entrySet()) {
       out = replace(out, entry.getKey(), entry.getValue(), false);
     }
@@ -197,6 +209,12 @@ final class PronunciationFrontend {
     String left = allowKoreanAdjacency ? "(?<![A-Za-z0-9-])" : "(?<![A-Za-z0-9-])";
     String right = "(?![A-Za-z0-9-])";
     return text.replaceAll("(?i)" + left + Pattern.quote(key) + right, Matcher.quoteReplacement(value));
+  }
+
+  private static String replaceCaseSensitive(String text, String key, String value) {
+    String boundary = "[A-Za-z0-9+.#-]";
+    return text.replaceAll("(?<!" + boundary + ")" + Pattern.quote(key) + "(?!" + boundary + ")",
+        Matcher.quoteReplacement(value));
   }
 
   private static String replaceGtx(String text) {

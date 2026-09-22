@@ -102,6 +102,10 @@ final class SentenceBoundaryPausePolicy {
   private static boolean internalPeriod(String text, int index) {
     char before = index > 0 ? text.charAt(index - 1) : 0;
     char after = index + 1 < text.length() ? text.charAt(index + 1) : 0;
+    // A leading-point decimal such as ".987" is one numeric token. Protect it
+    // before sentence splitting so the numeric normalizer can read 점구팔칠.
+    if (Character.isDigit(after) &&
+        (before == 0 || Character.isWhitespace(before) || "([{,:;".indexOf(before) >= 0)) return true;
     if (Character.isDigit(before) && Character.isDigit(after)) return true;
     // Dots between URL/email/domain characters are protected; a terminal dot remains a boundary.
     return (Character.isLetterOrDigit(before) || before == '_' || before == '-') &&

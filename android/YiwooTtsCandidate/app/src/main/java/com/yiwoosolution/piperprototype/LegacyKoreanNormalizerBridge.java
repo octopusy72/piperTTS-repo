@@ -22,7 +22,6 @@ final class LegacyKoreanNormalizerBridge {
       Log.i("YiwooPiperKo", "NORMALIZER_FAST_PATH kind=plain_hangul");
       return value.trim().replaceAll("\\s+", " ");
     }
-    if (context != null) value = ReadingRuleEngine.apply(value, new ReadingRuleRepository(context));
     value = LegacyTextNormalizer.applyPreLegacyExtensions(value);
     KoreanSpeechNormalizer normalizer = context == null ? new KoreanSpeechNormalizer() : production(context);
     SpeechNormalization detailed = normalizer.normalizeDetailed(value);

@@ -47,6 +47,8 @@ class SpeechPatternDetector(private val classifier: ContextClassifier = ContextC
         Rule(SpeechSpanType.TIME_RANGE, Regex("\\d{1,2}:\\d{2}\\s*[~∼–—-]\\s*\\d{1,2}:\\d{2}"), 86),
         Rule(SpeechSpanType.TIME, Regex("\\d{1,2}\\s*시(?:\\s*\\d{1,2}\\s*분)?|\\d{1,2}:\\d{1,2}"), 70),
         Rule(SpeechSpanType.FRACTION, Regex("\\d+/\\d+"), 68),
+        // Claim the complete span before the generic numeric identifier can consume 987.
+        Rule(SpeechSpanType.DECIMAL, Regex("(?<![A-Za-z0-9.])\\.\\d+(?![A-Za-z0-9.])"), 96),
         Rule(SpeechSpanType.DECIMAL, Regex("\\d+\\.\\d+"), 60),
         Rule(SpeechSpanType.ELLIPSIS, Regex("(?:\\.{2,}|…+)"), 50),
         Rule(SpeechSpanType.NUMBER, Regex("\\d[\\d,]*\\s*(?:개월|시|분|개|명|살|병|번|호|가지|일)?"), 10),

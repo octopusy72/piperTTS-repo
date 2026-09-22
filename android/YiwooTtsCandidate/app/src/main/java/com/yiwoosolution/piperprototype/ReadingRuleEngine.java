@@ -17,9 +17,13 @@ final class ReadingRuleEngine {
   }
 
   static String apply(String input, ReadingRuleRepository repository, ReadingRule.Language language) {
-    if (input == null || input.isEmpty() || !repository.enabled()) return input == null ? "" : input;
+    return apply(input, repository.list(), repository.enabled(), language);
+  }
+
+  static String apply(String input, List<ReadingRule> configuredRules, boolean enabled, ReadingRule.Language language) {
+    if (input == null || input.isEmpty() || !enabled) return input == null ? "" : input;
     List<ReadingRule> rules = new ArrayList<>();
-    for (ReadingRule rule : repository.list()) {
+    for (ReadingRule rule : configuredRules) {
       if (!rule.enabled || (rule.language != ReadingRule.Language.ALL && rule.language != language)) continue;
       rules.add(rule);
     }
